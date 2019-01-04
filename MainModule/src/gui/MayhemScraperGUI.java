@@ -8,7 +8,7 @@ public class MayhemScraperGUI extends JFrame {
     private JPanel mainPanel;
     private JButton runButton;
     private JLabel labelStatus;
-    private JLabel labelStatusValue;
+    private JLabel labelStatusData;
 
     public MayhemScraperGUI() {
         this.setContentPane(mainPanel);
