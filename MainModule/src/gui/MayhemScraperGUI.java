@@ -1,5 +1,7 @@
 package gui;
 
+import logic.MayhemScraperLogic;
+
 import javax.swing.*;
 
 public class MayhemScraperGUI extends JFrame {
@@ -10,7 +12,11 @@ public class MayhemScraperGUI extends JFrame {
 
     public MayhemScraperGUI() {
         this.setContentPane(mainPanel);
-        runButton.addActionListener(e -> System.out.println("Button clicked"));
+        MayhemScraperLogic logicObj = new MayhemScraperLogic();
+        runButton.addActionListener(e -> {
+            System.out.println("Button clicked");
+            logicObj.Run();
+        });
         mainPanel.setVisible(true);
     }
 }
