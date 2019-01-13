@@ -1,15 +1,13 @@
 package logic;
 
 import logic.Models.ScrapedModelItem;
-import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-
 import javax.swing.*;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -102,12 +100,12 @@ public class MayhemScraperLogic {
 
     public void createNewOutputFile() {
         try {
-            File path = new File(new File(MayhemScraper.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath());
+            File path = new File(StringUtils.removeEnd(new File(".").getAbsolutePath(), "."));
             String outputPath = path.getAbsolutePath() + File.separator + "Mayhem models results.csv";
             StringBuilder sb = new StringBuilder();
             sb.append("\"Modelname\"").append(',').append("\"Location\"").append(',').append("\"WebsiteURL\"").append('\n');
             Files.write(Paths.get(outputPath), sb.toString().getBytes(), StandardOpenOption.CREATE);
-        } catch (IOException | URISyntaxException e){
+        } catch (IOException e){
             e.printStackTrace();
         }
     }
@@ -117,7 +115,7 @@ public class MayhemScraperLogic {
             return;
         }
         try {
-            File path = new File(new File(MayhemScraper.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath());
+            File path = new File(StringUtils.removeEnd(new File(".").getAbsolutePath(), "."));
             String outputPath = path.getAbsolutePath() + File.separator + "Mayhem models results.csv";
             StringBuilder sb = new StringBuilder();
             for (ScrapedModelItem item : resultItems) {
@@ -138,7 +136,7 @@ public class MayhemScraperLogic {
             }
             Files.createDirectories(Paths.get(path.getParent()));
             Files.write(Paths.get(outputPath), sb.toString().getBytes(), StandardOpenOption.APPEND);
-        } catch (URISyntaxException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         resultItems.clear();
@@ -185,7 +183,7 @@ public class MayhemScraperLogic {
         OutputStream output = null;
         try {
             File propertiesFileTemp = File.createTempFile("configMS", ".properties");
-            String propPath = FilenameUtils.getFullPathNoEndSeparator(propertiesFileTemp.getAbsolutePath()) + File.separator + "configMS.properties";
+            String propPath = propertiesFileTemp.getAbsolutePath().substring(0, propertiesFileTemp.getAbsolutePath().lastIndexOf(File.separator)) + File.separator + "configMS.properties";
             File f = new File(propPath);
             if (f.exists() && !f.isDirectory()) {
                 propertiesFile = f;
