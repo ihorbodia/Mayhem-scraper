@@ -5,35 +5,144 @@ import org.apache.commons.io.FilenameUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
+import javax.swing.*;
 import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MayhemScraperLogic {
 
     private static List<ScrapedModelItem> resultItems;
-    //private final int maximumIndex = 9999999;
-    private final int maximumIndex = 500;
+    private final int maximumIndex = 9999999;
     private int currentIndex = 1;
     File propertiesFile;
-    Boolean IsWorked;
+    ExecutorService executorService;
+    public Future<?> future;
+    Boolean isWorked;
+    JLabel labelStatusData;
+    JButton runBtn;
+    JButton stopBtn;
+    Boolean stopedWork = false;
+
+    public MayhemScraperLogic(JLabel labelStatusData, JButton runBtn, JButton stopButton) {
+        this.labelStatusData = labelStatusData;
+        this.runBtn = runBtn;
+        this.stopBtn = stopButton;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            saveProperties();
+            saveDataToFile();
+        }));
+    }
 
     public Properties properties = new Properties();
 
+    public void Stop() {
+        stopedWork = true;
+    }
+
+    private void setDefaultValues() {
+        currentIndex = 1;
+        isWorked = false;
+        stopedWork = false;
+    }
+
     public void Run() {
         resultItems = new ArrayList();
-        while (currentIndex < maximumIndex) {
-            IsWorked = true;
-            String URL = prepareURL();
-            Element body = scrapeCurrentPage(URL);
-            resultItems.add(new ScrapedModelItem(body, currentIndex));
+        executorService = Executors.newSingleThreadExecutor();
+        future = executorService.submit(() -> {
+            createNewOutputFile();
+            setDefaultValues();
+            while (currentIndex <= maximumIndex && !stopedWork) {
+                isWorked = true;
+                String URL = prepareURL();
+                Element body = scrapeCurrentPage(URL);
+                resultItems.add(new ScrapedModelItem(body, currentIndex));
+                updateMultipleSearchGUI();
+                saveProperties();
+                currentIndex++;
+                if (resultItems.size() > 10000){
+                    saveDataToFile();
+                }
+            }
+        });
+
+        Thread thread = new Thread(() -> {
+            runBtn.setEnabled(false);
+            stopBtn.setEnabled(true);
+            while (true) {
+                if (future.isDone()) {
+                    labelStatusData.setText((currentIndex - 1) + "/" + maximumIndex + " accounts processed. Finished.");
+                    break;
+                }
+            }
+            setDefaultValues();
             saveProperties();
-            currentIndex++;
+            saveDataToFile();
+            runBtn.setEnabled(true);
+            stopBtn.setEnabled(false);
+        });
+        thread.start();
+    }
+
+    public void updateMultipleSearchGUI() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> labelStatusData.setText((currentIndex - 1) + "/" + maximumIndex + " accounts processed. "));
+            return;
         }
-        currentIndex = 1;
-        IsWorked = false;
-        saveProperties();
+    }
+
+    public void createNewOutputFile() {
+        try {
+            File path = new File(new File(MayhemScraper.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath());
+            String outputPath = path.getAbsolutePath() + File.separator + "Mayhem models results.csv";
+            StringBuilder sb = new StringBuilder();
+            sb.append("\"Modelname\"").append(',').append("\"Location\"").append(',').append("\"WebsiteURL\"").append('\n');
+            Files.write(Paths.get(outputPath), sb.toString().getBytes(), StandardOpenOption.CREATE);
+        } catch (IOException | URISyntaxException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void saveDataToFile() {
+        if (resultItems == null) {
+            return;
+        }
+        try {
+            File path = new File(new File(MayhemScraper.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath());
+            String outputPath = path.getAbsolutePath() + File.separator + "Mayhem models results.csv";
+            StringBuilder sb = new StringBuilder();
+            for (ScrapedModelItem item : resultItems) {
+                if (item.isObjectCorrect) {
+                    sb.append("\"")
+                            .append(item.ModelName)
+                            .append("\"")
+                            .append(',')
+                            .append("\"")
+                            .append(item.Location)
+                            .append("\"")
+                            .append(',')
+                            .append("\"")
+                            .append(item.WebsiteURL)
+                            .append("\"")
+                            .append('\n');
+                }
+            }
+            Files.createDirectories(Paths.get(path.getParent()));
+            Files.write(Paths.get(outputPath), sb.toString().getBytes(), StandardOpenOption.APPEND);
+        } catch (URISyntaxException | IOException e) {
+            e.printStackTrace();
+        }
+        resultItems.clear();
     }
 
     private String prepareURL() {
@@ -55,7 +164,7 @@ public class MayhemScraperLogic {
         try {
             output = new FileOutputStream(propertiesFile.getAbsoluteFile());
             properties.setProperty("index", String.valueOf(currentIndex));
-            properties.setProperty("IsWorked", String.valueOf(IsWorked));
+            properties.setProperty("isWorked", String.valueOf(isWorked));
             properties.store(output, null);
         } catch (IOException io) {
             io.printStackTrace();
@@ -86,7 +195,7 @@ public class MayhemScraperLogic {
                 f.createNewFile();
                 output = new FileOutputStream(propertiesFile.getAbsoluteFile());
                 properties.setProperty("index", "1");
-                properties.setProperty("IsWorked", "false");
+                properties.setProperty("isWorked", "false");
                 properties.store(output, null);
             }
             propertiesFileTemp.delete();
@@ -117,12 +226,12 @@ public class MayhemScraperLogic {
                 currentIndex = Integer.parseInt(currentIndexStr);
             }
 
-            if (properties.get("IsWorked") != null) {
-                String isWorkStr = properties.get("IsWorked").toString();
-                IsWorked = Boolean.parseBoolean(isWorkStr);
+            if (properties.get("isWorked") != null) {
+                String isWorkStr = properties.get("isWorked").toString();
+                isWorked = Boolean.parseBoolean(isWorkStr);
             }
 
-            if (IsWorked) {
+            if (isWorked) {
                 Run();
             }
         } catch (IOException ex) {
