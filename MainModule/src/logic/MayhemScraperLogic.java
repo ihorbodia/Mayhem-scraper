@@ -61,7 +61,6 @@ public class MayhemScraperLogic {
         executorService = Executors.newSingleThreadExecutor();
         future = executorService.submit(() -> {
             createNewOutputFile();
-            setDefaultValues();
             while (currentIndex <= maximumIndex && !stopedWork) {
                 isWorked = true;
                 String URL = prepareURL();
@@ -233,6 +232,9 @@ public class MayhemScraperLogic {
 
             if (isWorked) {
                 Run();
+            }
+            else {
+                labelStatusData.setText("press Run to start");
             }
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
