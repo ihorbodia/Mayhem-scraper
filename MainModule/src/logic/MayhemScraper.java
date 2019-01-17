@@ -18,7 +18,7 @@ public class MayhemScraper {
         } catch (Exception e) {
             // If Nimbus is not available, you can set the GUI to another look and feel.
         }
-        gui.setTitle("Mayhem scraper v 1.1");
+        gui.setTitle("Mayhem scraper v 1.2");
         gui.setVisible(true);
         gui.setResizable(false);
         gui.setSize(400, 150);

@@ -28,7 +28,7 @@ public class ScrapedModelItem {
         Element errorInfoMessage = body.select("#not-approved-title").first();
         if (errorInfoMessage == null){
             String gender = body.select("#user_type").text();
-            if (gender.contains("Female")){
+            if (gender.toLowerCase().contains("female") && gender.toLowerCase().contains("model")){
                 Location = body.select("div.location").text();
                 ModelName = body.select("#user_name").text();
                 Description = body.select("#about-me-container").text();
