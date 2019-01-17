@@ -103,7 +103,7 @@ public class MayhemScraperLogic {
             File path = new File(StringUtils.removeEnd(new File(".").getAbsolutePath(), "."));
             String outputPath = path.getAbsolutePath() + File.separator + "Mayhem models results.csv";
             StringBuilder sb = new StringBuilder();
-            sb.append("\"Modelname\"").append(',').append("\"Location\"").append(',').append("\"WebsiteURL\"").append('\n');
+            sb.append("\"ModelName\"").append(',').append("\"Location\"").append(',').append("\"WebsiteURL\"").append(',').append("\"MMId\"").append('\n');
             Files.write(Paths.get(outputPath), sb.toString().getBytes(), StandardOpenOption.CREATE);
         } catch (IOException e){
             e.printStackTrace();
@@ -130,6 +130,10 @@ public class MayhemScraperLogic {
                             .append(',')
                             .append("\"")
                             .append(item.WebsiteURL)
+                            .append("\"")
+                            .append(',')
+                            .append("\"")
+                            .append(item.Id)
                             .append("\"")
                             .append('\n');
                 }

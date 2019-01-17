@@ -31,19 +31,18 @@ public class ScrapedModelItem {
             if (gender.contains("Female")){
                 Location = body.select("div.location").text();
                 ModelName = body.select("#user_name").text();
-                WebsiteURL = body.select("div.website_url").text();
                 Description = body.select("#about-me-container").text();
+                Pattern igPattern = Pattern.compile("(((instagram\\.com\\/)|(ig\\ ?\\-\\ ?))([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\\.(?!\\.))){0,28}(?:[A-Za-z0-9_]))?))|(@([a-z0-9_]{1,255}))");
+                Pattern fbPattern = Pattern.compile("(?:https?:\\/\\/)?(?:www\\.)?(?:facebook|fb|m\\.facebook)\\.(?:com|me)\\/(?:(?:\\w)*#!\\/)?(?:pages\\/)?(?:[\\w\\-]*\\/)*([\\w\\-\\.]+)(?:\\/)?");
+                Matcher igMatcher = igPattern.matcher(Description.toLowerCase());
+                Matcher fbMatcher = fbPattern.matcher(Description.toLowerCase());
+                if (igMatcher.find()) {
+                    WebsiteURL = igMatcher.group(0);
+                } else if (fbMatcher.find()) {
+                    WebsiteURL = fbMatcher.group(0);
+                }
                 if (StringUtils.isEmpty(WebsiteURL)) {
-                    Pattern igPattern = Pattern.compile("(instagram\\.com\\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\\.(?!\\.))){0,28}(?:[A-Za-z0-9_]))?))|(@([a-z0-9_]{1,255}))");
-                    Pattern fbPattern = Pattern.compile("(?:https?:\\/\\/)?(?:www\\.)?(?:facebook|fb|m\\.facebook)\\.(?:com|me)\\/(?:(?:\\w)*#!\\/)?(?:pages\\/)?(?:[\\w\\-]*\\/)*([\\w\\-\\.]+)(?:\\/)?");
-                    Matcher igMatcher = igPattern.matcher(Description);
-                    Matcher fbMatcher = fbPattern.matcher(Description);
-                    if (igMatcher.find()) {
-                        WebsiteURL = igMatcher.group(0);
-                    }
-                    else if (fbMatcher.find()) {
-                        WebsiteURL = fbMatcher.group(0);
-                    }
+                    WebsiteURL = body.select("a.website_url").text();
                 }
                 return;
             }
